@@ -1,6 +1,24 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
+
+#include <MFRC522.h>
+#include <SPI.h> //biblioteca para comunicação do barramento SPI
+
 #include <ArduinoJson.h>
+
+#define SS_PIN    21
+#define RST_PIN   22
+#define SIZE_BUFFER     18
+#define MAX_SIZE_BLOCK  16
+#define pinVerde     32
+#define pinVermelho  12
+
+//esse objeto 'chave' é utilizado para autenticação
+MFRC522::MIFARE_Key key;
+//código de status de retorno da autenticação
+MFRC522::StatusCode status;
+// Definicoes pino modulo RC522
+MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 // Replace with your network credentials
 const char* ssid = "Inteli-COLLEGE";
@@ -24,6 +42,8 @@ unsigned long delay_time = 5000;
 
 String BSSID;
 
+String RFID = "";
+
 void changing_BSSID() {
   if (WiFi.BSSIDstr() != BSSID) {
     BSSID = WiFi.BSSIDstr();
@@ -34,6 +54,10 @@ void changing_BSSID() {
 void setup() {
   // Start serial communication
   Serial.begin(115200);
+
+  SPI.begin(); // Init SPI bus
+  // Inicia MFRC522
+  mfrc522.PCD_Init();
 
   WiFi.mode(WIFI_STA);
 
@@ -65,9 +89,11 @@ void setup() {
 
 void loop() {
   changing_BSSID();
+  read_rsid();
   if (millis() - timer > delay_time) {
     StaticJsonDocument<200> payload;
     payload["BSSID"] = BSSID;
+    payload["RSID"] = RFID;
 
     String json_payload;
     serializeJson(payload, json_payload);
@@ -75,7 +101,24 @@ void loop() {
     client.publish(mqttTopic, json_payload.c_str());
     timer = millis();
   }
-
 }
 
+void read_rsid() {
+  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+    RFID = getRFIDValue();
+    Serial.print("UID: ");
+    Serial.println(RFID);
 
+    mfrc522.PICC_HaltA();
+    mfrc522.PCD_StopCrypto1();
+  }
+}
+
+String getRFIDValue() {
+  String uid = "";
+  for (byte i = 0; i < mfrc522.uid.size; i++) {
+    uid += String(mfrc522.uid.uidByte[i] < 0x10 ? "0" : "");
+    uid += String(mfrc522.uid.uidByte[i], HEX);
+  }
+  return uid;
+}
