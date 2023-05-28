@@ -10,8 +10,25 @@
 #define RST_PIN   22
 #define SIZE_BUFFER     18
 #define MAX_SIZE_BLOCK  16
-#define pinVerde     32
-#define pinVermelho  12
+
+//song
+
+#define NOTE_G4  392
+#define NOTE_G5  784
+#define NOTE_C4  262
+#define NOTE_C5  523
+
+const int speakerPin = 16; // GPIO pin connected to the speaker or buzzer
+
+int onSong[] = {NOTE_C4, NOTE_G4, NOTE_C5, NOTE_G5};
+int offSong[] = {NOTE_G5, NOTE_C5, NOTE_G4, NOTE_C4};
+int errorSong[] = {NOTE_G5, NOTE_G5, NOTE_G5, NOTE_G5};
+
+int noteDurations[] = {
+  8, 8, 8, 8
+};
+
+int tempo = 120; // Adjust the tempo as desired
 
 //esse objeto 'chave' é utilizado para autenticação
 MFRC522::MIFARE_Key key;
@@ -21,8 +38,10 @@ MFRC522::StatusCode status;
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 // Replace with your network credentials
+
 const char* ssid = "Inteli-COLLEGE";
 const char* password = "QazWsx@123";
+
 
 // MQTT broker details
 const char* mqttServer = "test.mosquitto.org";
@@ -59,6 +78,9 @@ void setup() {
   // Inicia MFRC522
   mfrc522.PCD_Init();
 
+  ledcSetup(0, 2000, 8); // Channel 0, 2kHz frequency, 8-bit resolution
+  ledcAttachPin(speakerPin, 0); // Attach the speaker pin to channel 0
+
   WiFi.mode(WIFI_STA);
 
   // Connect to Wi-Fi network
@@ -89,11 +111,11 @@ void setup() {
 
 void loop() {
   changing_BSSID();
-  read_rsid();
+  read_rfid();
   if (millis() - timer > delay_time) {
     StaticJsonDocument<200> payload;
     payload["BSSID"] = BSSID;
-    payload["RSID"] = RFID;
+    payload["RFID"] = RFID;
 
     String json_payload;
     serializeJson(payload, json_payload);
@@ -103,9 +125,20 @@ void loop() {
   }
 }
 
-void read_rsid() {
+void read_rfid() {
   if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
-    RFID = getRFIDValue();
+    //RFID = getRFIDValue();
+    String newRFID = getRFIDValue();
+    if (RFID == "") {
+      RFID = newRFID;
+      playMelody(onSong, noteDurations, sizeof(onSong) / sizeof(onSong[0]));
+    } else if (RFID == newRFID) {
+      RFID = "";
+      playMelody(offSong, noteDurations, sizeof(offSong) / sizeof(offSong[0]));
+    } else {
+      playMelody(errorSong, noteDurations, sizeof(errorSong) / sizeof(errorSong[0]));
+    }
+
     Serial.print("UID: ");
     Serial.println(RFID);
 
@@ -121,4 +154,16 @@ String getRFIDValue() {
     uid += String(mfrc522.uid.uidByte[i], HEX);
   }
   return uid;
+}
+
+void playMelody(int melody[], int noteDurations[], int melodyLength) {
+  for (int thisNote = 0; thisNote < melodyLength; thisNote++) {
+    int noteDuration = 1000 / noteDurations[thisNote];
+
+    ledcWriteTone(0, melody[thisNote]);
+    delay(noteDuration);
+
+    ledcWriteTone(0, 0); // Stop the tone
+    delay(50); // Pause between tones
+  }
 }
