@@ -7,7 +7,7 @@ const clientId = `mqtt_${Math.random().toString(16).slice(3)}_abson`
 const connectUrl = `mqtt://${host}:${port}`
 const client = mqtt.connect(connectUrl)
 
-const topic = 'devices/esp32/fabio/test'
+const topic = 'devices/esp32/godoy/test'
 
 client.on('connect', () => {
   console.log('Connected')
