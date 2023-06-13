@@ -34,6 +34,7 @@ void initMqtt() {
   // Set MQTT broker details
   client.setServer(mqttServer, mqttPort);
 
+  //Serial.println(client.setBufferSize(1024));
   // Connect to MQTT broker and subscribe to the topic
   while (!client.connected()) {
     Serial.println("Connecting to MQTT broker...");
@@ -51,15 +52,42 @@ void initMqtt() {
 
 void sendMqtt(String BSSID, String RFID) {
   if (millis() - timer > delay_time) {
-    StaticJsonDocument<200> payload;
+
+    std::vector<RouterInfo> routers = scanWifi();
+    const size_t capacity = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(70) + 70 * JSON_OBJECT_SIZE(2) + 120;
+    StaticJsonDocument<capacity> payload;
     payload["BSSID"] = BSSID;
     payload["RFID"] = RFID;
     payload["RSSI"] = WiFi.RSSI();
 
+   
+
+    JsonArray connections = payload.createNestedArray("connections");
+
+
+    for (const auto& router : routers) {
+      JsonObject connectionObj = connections.createNestedObject();
+      connectionObj["BSSID"] = router.BSSID;
+      connectionObj["RSSI"] = router.RSSI;
+    }
+
     String json_payload;
     serializeJson(payload, json_payload);
 
-    client.publish(mqttTopic, json_payload.c_str());
+    int emptyObjIndex = json_payload.lastIndexOf(",{}");
+    if (emptyObjIndex != -1) {
+      json_payload.remove(emptyObjIndex, 2);
+    }
+
+    Serial.println(json_payload);
+
+    client.setBufferSize(capacity + 1000);
+    if (client.getBufferSize()) {
+      client.publish(mqttTopic, json_payload.c_str());
+    } else {
+      Serial.println("DEU RUIM");
+    }
+    
     timer = millis();
     Serial.println("Enviei");
   }
