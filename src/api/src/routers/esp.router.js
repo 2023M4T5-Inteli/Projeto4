@@ -7,6 +7,7 @@ const router = Router();
 
 router.get('/', EspController.list);
 router.get('/:id', EspController.find);
+router.get('/:name/:value', EspController.findByVar);
 router.post('/', ...createEspValidation, EspController.create);
 router.put('/:id', ...updateEspValidation, EspController.update);
 router.delete('/:id', EspController.delete);

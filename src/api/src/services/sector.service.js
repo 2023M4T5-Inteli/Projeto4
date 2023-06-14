@@ -6,15 +6,15 @@ module.exports = class SectorService extends Service {
         super(repository);
     }
 
-    async create(name) {
-
+    async create(name, mapX, mapY) {
         if (!name) {
-            throw new InternalServerError("Sector must have a name address")
+            throw new InternalServerError('Sector must have a name address');
         }
 
         return await this.repository.create({
             name,
+            mapX,
+            mapY,
         });
     }
-
 };

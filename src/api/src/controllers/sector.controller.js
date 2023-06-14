@@ -5,7 +5,7 @@ module.exports = class SectorController extends Controller {
     static async list(req, res) {
         const sectorService = sectorServiceProvider();
 
-        const sectorList = await sectorService.list();
+        const sectorList = await sectorService.list(req.query, req.query.orderBy || 'createdAt-desc', req.query.limit);
 
         res.json(sectorList);
     }
@@ -18,12 +18,23 @@ module.exports = class SectorController extends Controller {
         res.json(sector);
     }
 
+    static async findByVar(req, res) {
+        const sectorService = sectorServiceProvider();
+
+        const filter = {};
+        filter[req.params.name] = req.params.value;
+        const sector = await sectorService.find(filter, req.query.orderBy || 'createdAt-desc');
+
+        res.json(sector);
+    }
+
     static async create(req, res) {
         Controller.validationResult(req);
-        const { name } = Controller.matchData(req);
+        const { name, mapX, mapY } = Controller.matchData(req);
 
         const sectorService = await sectorServiceProvider();
-        const sector = await sectorService.create(name);
+        const { _id } = await sectorService.create(name, mapX, mapY);
+        const sector = await sectorService.findById(_id);
 
         res.json(sector);
     }

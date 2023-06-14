@@ -1,4 +1,7 @@
+const BadRequestError = require('../errors/bad-request.error');
 const InternalServerError = require('../errors/internal-server-error');
+const espRouterMongoRepository = require('../repositories/esp-router.repository');
+const maintainerMongoRepository = require('../repositories/maintainer.repository');
 const Service = require('./service');
 
 module.exports = class HistoricService extends Service {
@@ -6,33 +9,54 @@ module.exports = class HistoricService extends Service {
         super(repository);
     }
 
-    async create(espId, mantainerId, date, sector, atStation) {
+    async create(espId, maintainerId, routerId, wifiPotency = null, connections = [], online = true, atStation = false, verified = false, iaEspSector = null) {
         if (!espId) {
             throw new InternalServerError('Historic must have a espId');
         }
 
-        if (!mantainerId) {
-            throw new InternalServerError('Historic must have a mantainerId');
+        if (!routerId) {
+            throw new InternalServerError('Historic must have a routerId');
         }
 
-        if (!date) {
-            throw new InternalServerError('Historic must have a date');
+        let maintainerSectorId = null;
+        if (maintainerId) {
+            const maintainer = await maintainerMongoRepository.findById(maintainerId);
+
+            if (!maintainer) {
+                throw new BadRequestError("Maintainer doen't exists");
+            }
+
+            maintainerId = maintainer.id;
+
+            if (maintainer.sector) {
+                maintainerSectorId = maintainer.sector.id;
+            }
         }
 
-        if (!sector) {
-            throw new InternalServerError('Historic must have a sector');
+        let espSectorId = null;
+        const router = await espRouterMongoRepository.findById(routerId);
+        if (!router) {
+            throw new BadRequestError("Router doesn't exists");
         }
 
-        if (!atStation) {
-            throw new InternalServerError('Historic have atStation declaration');
+        if (router.sector) {
+            espSectorId = router.sector.id;
         }
+
+        connections = connections || [];
 
         return await this.repository.create({
-            espId,
-            mantainerId,
-            date,
-            sector,
+            esp: espId,
+            espSector: espSectorId,
+            maintainer: maintainerId,
+            maintainerSector: maintainerSectorId,
+            router: routerId,
+            wifiPotency,
             atStation,
+            online,
+            verified,
+            connections,
+            iaEspSector,
         });
     }
 };

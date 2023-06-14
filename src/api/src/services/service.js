@@ -3,6 +3,10 @@ module.exports = class Service {
         this.repository = repository;
     }
 
+    getDefaultRelations() {
+        return this.repository.getSchemaRefs();
+    }
+
     async update(data) {
         return await this.repository.update(data);
     }
@@ -15,11 +19,19 @@ module.exports = class Service {
         return await this.repository.create(data);
     }
 
-    async findById(id) {
-        return await this.repository.findById(id);
+    async findById(id, populates = this.getDefaultRelations()) {
+        return await this.repository.findById(id, populates);
     }
 
-    async list(filters, orders, select, limit) {
-        return await this.repository.list(filters, orders, select, limit);
+    async find(filters, orders, populates = this.getDefaultRelations()) {
+        return await this.repository.find(filters, populates, orders);
+    }
+
+    async findLast(filters, populates = this.getDefaultRelations()) {
+        return await this.repository.find(filters, populates, 'createdAt-desc');
+    }
+
+    async list(filters, orders, limit, populates = this.getDefaultRelations(), select) {
+        return await this.repository.list(filters, populates, orders, select, limit);
     }
 };

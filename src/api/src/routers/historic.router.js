@@ -7,6 +7,7 @@ const router = Router();
 
 router.get('/', HistoricController.list);
 router.get('/:id', HistoricController.find);
+router.get('/:name/:value', HistoricController.findByVar);
 router.post('/', ...createHistoricValidation, HistoricController.create);
 router.put('/:id', ...updateHistoricValidation, HistoricController.update);
 router.delete('/:id', HistoricController.delete);

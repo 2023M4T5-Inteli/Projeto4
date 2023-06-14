@@ -1,6 +1,6 @@
-const MaintenerSchema = require('../schemas/maintainer.schema');
+const maintainerSchema = require('../schemas/maintainer.schema');
 const MongoRepository = require('./mongo.repository');
 
-class MaintenerMongoRepository extends MongoRepository {}
+class MaintainerMongoRepository extends MongoRepository {}
 
-module.exports = new MaintenerMongoRepository(MaintenerSchema, 'Maintener');
+module.exports = new MaintainerMongoRepository(maintainerSchema, 'Maintainer');

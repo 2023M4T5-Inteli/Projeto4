@@ -2,8 +2,8 @@ const express = require('express');
 const cors = require('cors');
 
 const environmentVars = require('./config/environment.config');
-const MongoConnection = require('./connections/mongo.connection');
 const router = require('./routers/router');
+const startGlobalConnections = require('./config/start-global-connections.config');
 
 const app = express();
 
@@ -16,7 +16,5 @@ app.use('/', router);
 
 app.listen(environmentVars.PORT, () => {
     console.log(`API started on ${environmentVars.PORT} port`);
-
-    const mongoConnection = new MongoConnection();
-    mongoConnection.connect();
+    startGlobalConnections();
 });
