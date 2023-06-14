@@ -10,7 +10,7 @@ const char* mqttServer = "test.mosquitto.org";
 const int mqttPort = 1883;
 
 // MQTT topic to subscribe to
-const String stringTopic = "devices/esp32/qhkxtipnorab/" + WiFi.macAddress();//"devices/esp32/yimeolimolcbr/" + WiFi.macAddress();  devices/esp32/yimeolimolcb/+
+const String stringTopic = "devices/esp32/yimeolimolcb/" + WiFi.macAddress();//"devices/esp32/yimeolimolcbr/" + WiFi.macAddress();  devices/esp32/yimeolimolcb/+
 const char* mqttTopic = stringTopic.c_str();
 
 const String StringLastWillTopic = stringTopic + "/lastwill";
