@@ -4,7 +4,7 @@
 
 void setup() {
   // Start serial communication
-  Serial.begin(9600);
+  Serial.begin(115200);
 
 
   initRfid();
@@ -19,6 +19,10 @@ void loop() {
   changing_BSSID();
   read_rfid();
   sendMqtt(BSSID, RFID);
+  std::vector<RouterInfo> routers = scanWifi();
+  //Serial.println(routers[0].BSSID);
+
+
 }
 
 

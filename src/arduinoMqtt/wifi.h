@@ -5,16 +5,11 @@
 #include <vector>
 #include <string.h>
 
-struct RouterInfo {
-  String SSID;
-  String BSSID;
-  int RSSI;
-};
+const char* ssid = "Inteli-COLLEGE";
+const char* password = "QazWsx@123";
 
-const char* ssid = "";
-const char* password = "";
-
-String BSSID;
+//uint8_t BSSID;
+String BSSID;  // Define BSSID as an array of uint8_t with a length of 6
 
 void initWifi() {
   WiFi.mode(WIFI_STA);
@@ -26,13 +21,6 @@ void initWifi() {
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
-}
-
-void changing_BSSID() {
-  if (WiFi.BSSIDstr() != BSSID) {
-    BSSID = WiFi.BSSIDstr();
-    Serial.println("New Router BSSID:" + BSSID);
-  }
 }
 
 void connectToWiFi() {
@@ -55,23 +43,38 @@ void reconnectWifi() {
   }
 }
 
-//lembrar de filtrar os wifi
-void scanWifi() {
+void changing_BSSID() {
+  if (WiFi.BSSIDstr() != BSSID) {
+    BSSID = WiFi.BSSIDstr();
+    Serial.println("New Router BSSID:" + BSSID);
+  }
+}
+
+struct RouterInfo {
+  String BSSID;
+  int RSSI;
+};
+
+std::vector<RouterInfo> scanWifi() {
+  std::vector<RouterInfo> routers;
   int n = WiFi.scanNetworks();
-    if (n == 0) {
-        Serial.println("no networks found");
-    } else {
-        Serial.print(n);
-        Serial.println(" networks found");
-        for (int i = 0; i < n; ++i) {
-            // Print SSID and RSSI for each network found
-            Serial.print(i + 1);
-            Serial.print(": ");
-            Serial.print(WiFi.SSID(i));
-            Serial.print(" (");
-            Serial.print(WiFi.RSSI(i));
-            Serial.println(")");
-        }
-    }
+  if (n == 0) {
+    Serial.println("no networks found");
+  } else {
+    Serial.print(n);
+    Serial.println(" networks found");
+    for (int i = 0; i < n; ++i) {
+      if (WiFi.BSSIDstr(i) == BSSID) {
+        continue;
+      } else {
+        RouterInfo router;
+        router.BSSID = WiFi.BSSIDstr(i);
+        router.RSSI = WiFi.RSSI(i);
+
+        routers.push_back(router);
+      }
+    }  
+  }
+  return routers;
 }
 #endif
