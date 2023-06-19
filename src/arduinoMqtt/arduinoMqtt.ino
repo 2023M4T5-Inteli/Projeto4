@@ -19,10 +19,6 @@ void loop() {
   changing_BSSID();
   read_rfid();
   sendMqtt(BSSID, RFID);
-  std::vector<RouterInfo> routers = scanWifi();
-  //Serial.println(routers[0].BSSID);
-
-
 }
 
 
