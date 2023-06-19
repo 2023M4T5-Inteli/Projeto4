@@ -5,12 +5,14 @@
 #include <vector>
 #include <string.h>
 
+//informações para conecatr na rede wifi
 const char* ssid = "Inteli-COLLEGE";
 const char* password = "QazWsx@123";
 
 //uint8_t BSSID;
 String BSSID;  // Define BSSID as an array of uint8_t with a length of 6
 
+//configura o esp para se conectar ao wifi
 void initWifi() {
   WiFi.mode(WIFI_STA);
 
@@ -43,6 +45,7 @@ void reconnectWifi() {
   }
 }
 
+//verifica se houve mudança de roteador 
 void changing_BSSID() {
   if (WiFi.BSSIDstr() != BSSID) {
     BSSID = WiFi.BSSIDstr();
@@ -50,11 +53,13 @@ void changing_BSSID() {
   }
 }
 
+//struct para armazenar dados do wifi
 struct RouterInfo {
   String BSSID;
   int RSSI;
 };
 
+//scan de wifi que retorna todos os wifis na região em um vetor
 std::vector<RouterInfo> scanWifi() {
   std::vector<RouterInfo> routers;
   int n = WiFi.scanNetworks();
