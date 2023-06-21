@@ -12,6 +12,7 @@ from sklearn.dummy import DummyClassifier
 import pickle
 import joblib
 import numpy as np
+from sklearn.tree import DecisionTreeClassifier
 
 global columns_df
 
@@ -105,8 +106,9 @@ def modelTrain():
     if justOneClass:
         model = constant_model(X_train, y_train[0])
     else:
-        model = LogisticRegression()
+        model = DecisionTreeClassifier()
         model.fit(X_train, y_train)
+
 
     pickle.dump(model, open('AIoTModel.pkl', 'wb'))
 
