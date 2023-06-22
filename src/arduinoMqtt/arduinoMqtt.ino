@@ -20,7 +20,8 @@ void loop() {
   //funções básicas: troca de wifi, leitura de cartão e envio de informação
   changing_BSSID();
   read_rfid();
-  sendMqtt(BSSID, RFID);
+  setRouterInfo();
+  sendMqtt(BSSID, RFID, routers);
 }
 
 

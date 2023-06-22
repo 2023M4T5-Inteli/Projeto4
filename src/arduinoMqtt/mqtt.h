@@ -75,11 +75,10 @@ void reconnectMqtt() {
   client.loop();
 }
 
-void sendMqtt(String BSSID, String RFID) {
+void sendMqtt(String BSSID, String RFID, std::vector<RouterInfo> routers) {
   if (millis() - timer > delay_time) {
 
     //armazena as informações do wifi num vetor
-    std::vector<RouterInfo> routers = scanWifi();
     const size_t capacity = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(70) + 70 * JSON_OBJECT_SIZE(2) + 120;//tamanjo do staticjson
     StaticJsonDocument<capacity> payload;
     payload["BSSID"] = BSSID;
