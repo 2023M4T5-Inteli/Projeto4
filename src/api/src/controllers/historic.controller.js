@@ -1,5 +1,8 @@
 const Controller = require('./controller');
 const historicServiceProvider = require('../providers/historic.provider');
+const espServiceProvider = require('../providers/esp.provider');
+const espRouterServiceProvider = require('../providers/esp-router.provider');
+const maintainerServiceProvider = require('../providers/maintainer.provider');
 
 module.exports = class HistoricController extends Controller {
     static async list(req, res) {
@@ -33,8 +36,24 @@ module.exports = class HistoricController extends Controller {
         const { esp, maintainer, router, wifiPotency, atStation, online, verified, connections, iaEspSector } = Controller.matchData(req);
 
         const historicService = historicServiceProvider();
+        const espService = espServiceProvider();
+        const maintainerService = maintainerServiceProvider();
+        const espRouterService = espRouterServiceProvider();
 
         const { _id } = await historicService.create(esp, maintainer, router, wifiPotency, connections, online, atStation, verified, iaEspSector);
+
+        if (esp) {
+            await espService.update({ _id: esp, lastHistoric: _id });
+        }
+
+        if (maintainer) {
+            await maintainerService.update({ _id: maintainer, lastHistoric: _id });
+        }
+
+        if (router) {
+            await espRouterService.update({ _id: router, lastHistoric: _id });
+        }
+
         const historic = await historicService.findById(_id);
 
         res.json(historic);

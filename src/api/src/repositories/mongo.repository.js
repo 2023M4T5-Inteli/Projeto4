@@ -16,7 +16,22 @@ module.exports = class MongoRepository {
         const getRefs = (schema = this.model.schema, schemaPath = '') => {
             schema.eachPath((path, schemaType) => {
                 if (schemaType.instance === 'ObjectId' && schemaType.options.ref) {
-                    refs.push(schemaPath ? `${schemaPath}.${path}` : path);
+                    if (schemaType.options.ref == 'Historic') {
+                        refs.push({
+                            path: schemaType.path,
+                            populate: [
+                                { path: 'espSector' },
+                                { path: 'esp' },
+                                { path: 'iaEspSector' },
+                                { path: 'maintainer' },
+                                { path: 'maintainerSector' },
+                                { path: 'router' },
+                                { path: 'connections.router' },
+                            ],
+                        });
+                    } else {
+                        refs.push(schemaPath ? `${schemaPath}.${path}` : path);
+                    }
                 } else if (schemaType.instance === 'Array' || schemaType.instance === 'Embedded') {
                     getRefs(schemaType.schema, path);
                 }
@@ -32,29 +47,50 @@ module.exports = class MongoRepository {
         return this.model.modelName;
     }
 
+    validateFieldAndValueSchema(path, value) {
+        const schemaAttribute = this.schema.paths[path];
+
+        if (!schemaAttribute) {
+            return value;
+        }
+
+        if (schemaAttribute.instance == 'ObjectId') {
+            if (!mongoose.Types.ObjectId.isValid(value)) {
+                throw new InternalServerError("Object isn't valid");
+            }
+            value = value;
+        } else if (schemaAttribute.instance == 'Boolean') {
+            value = !!value;
+        } else if (schemaAttribute.instance == 'Number') {
+            value = value;
+        } else if (schemaAttribute.instance == 'String') {
+            if (schemaAttribute.enumValues && Array.isArray(schemaAttribute.enumValues) && schemaAttribute.enumValues.length) {
+                value = value;
+            } else {
+                value = {
+                    $regex: new RegExp(value, 'i'),
+                };
+            }
+        } else if (schemaAttribute.instance == 'Date') {
+            value = new Date(value);
+        }
+
+        return value;
+    }
+
     normalizeFiltersBySchemaFields(filters) {
         const normalizedFilters = {};
         Object.entries(filters)
             .filter((entrie) => {
-                return Object.keys(this.schema.paths).includes(entrie[0]);
+                return Object.keys(this.schema.paths).includes(String(entrie[0]).split('.')[0]);
             })
             .map((entrie) => {
-                const schemaAttribute = this.schema.paths[entrie[0]];
-                if (schemaAttribute.instance == 'ObjectId') {
-                    if (!mongoose.Types.ObjectId.isValid(entrie[1])) {
-                        throw new InternalServerError("Object isn't valid");
-                    }
-                    entrie[1] = entrie[1];
-                } else if (schemaAttribute.instance == 'Boolean') {
-                    entrie[1] = !!entrie[1];
-                } else if (schemaAttribute.instance == 'Number') {
-                    entrie[1] = entrie[1];
-                } else if (schemaAttribute.instance == 'String') {
+                if (Array.isArray(entrie[1])) {
                     entrie[1] = {
-                        $regex: new RegExp(entrie[1], 'i'),
+                        $in: entrie[1].map((value) => this.validateFieldAndValueSchema(entrie[0], value)),
                     };
-                } else if (schemaAttribute.instance == 'Date') {
-                    entrie[1] = new Date(entrie[1]);
+                } else {
+                    entrie[1] = this.validateFieldAndValueSchema(entrie[0], entrie[1]);
                 }
 
                 return entrie;

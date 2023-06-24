@@ -40,8 +40,10 @@ module.exports = async function espListener(mqttConnection = new MqttConnection(
 
 async function lastWillHistoric(topic, message) {
     const espService = espServiceProvider();
+    const espRouterService = espRouterServiceProvider();
     const historicService = historicServiceProvider();
     const notificationService = notificationServiceProvider();
+    const maintainerService = maintainerServiceProvider();
 
     const topicArray = topic.split('/');
     const lastWill = topicArray.pop();
@@ -54,7 +56,7 @@ async function lastWillHistoric(topic, message) {
         const maintainerId = lastHistoric.maintainer ? lastHistoric.maintainer.id : lastHistoric.maintainer;
         const routerId = lastHistoric.router ? lastHistoric.router.id : lastHistoric.router;
 
-        await historicService.create(
+        const { _id } = await historicService.create(
             esp.id,
             maintainerId,
             routerId,
@@ -65,6 +67,27 @@ async function lastWillHistoric(topic, message) {
             lastHistoric.verified,
             lastHistoric.iaEspSector
         );
+
+        if (maintainerId) {
+            maintainerService.update({
+                _id: maintainerId,
+                lastHistoric: _id,
+            });
+        }
+
+        if (routerId) {
+            espRouterService.update({
+                _id: routerId,
+                lastHistoric: _id,
+            });
+        }
+
+        if (esp.id) {
+            espService.update({
+                _id: esp.id,
+                lastHistoric: _id,
+            });
+        }
 
         await notificationService.create(`Localizador de tablet de MAC: ${esp.mac} foi desconectado`, 'esp', esp.id);
     }
@@ -131,6 +154,27 @@ async function normalHistoric(topic, message) {
     );
 
     const { _id } = await historicService.create(esp.id, maintainerId, espRouter.id, decodedMessage.RSSI, connections);
+
+    if (maintainerId) {
+        maintainerService.update({
+            _id: maintainerId,
+            lastHistoric: _id,
+        });
+    }
+
+    if (espRouter.id) {
+        espRouterService.update({
+            _id: espRouter.id,
+            lastHistoric: _id,
+        });
+    }
+
+    if (esp.id) {
+        espService.update({
+            _id: esp.id,
+            lastHistoric: _id,
+        });
+    }
 
     if (iaService.connection.baseUrl) {
         (async () => {

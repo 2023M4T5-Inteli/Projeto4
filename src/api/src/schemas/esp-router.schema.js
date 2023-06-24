@@ -16,6 +16,11 @@ const EspRouterSchema = new mongoose.Schema(
             type: String,
             default: null,
         },
+        lastHistoric: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Historic',
+            default: null,
+        },
     },
     { timestamps: true, versionKey: false }
 );

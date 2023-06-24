@@ -6,6 +6,7 @@ const updateSectorValidation = require('../validations/sector/update-sector.vali
 const router = Router();
 
 router.get('/', SectorController.list);
+router.get('/esps', SectorController.listWithEsps);
 router.get('/:id', SectorController.find);
 router.get('/:name/:value', SectorController.findByVar);
 router.post('/', ...createSectorValidation, SectorController.create);

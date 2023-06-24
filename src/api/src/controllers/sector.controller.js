@@ -1,11 +1,31 @@
 const Controller = require('./controller');
 const sectorServiceProvider = require('../providers/sector.provider');
+const historicServiceProvider = require('../providers/historic.provider');
+const espSectorProvider = require('../providers/esp.provider');
 
 module.exports = class SectorController extends Controller {
     static async list(req, res) {
         const sectorService = sectorServiceProvider();
 
         const sectorList = await sectorService.list(req.query, req.query.orderBy || 'createdAt-desc', req.query.limit);
+
+        res.json(sectorList);
+    }
+
+    static async listWithEsps(req, res) {
+        const sectorService = sectorServiceProvider();
+        const espService = espSectorProvider();
+
+        let sectorList = await sectorService.list(req.query, req.query.orderBy || 'createdAt-desc', req.query.limit);
+        const espList = await espService.list();
+
+        sectorList = sectorList.map((sector) => {
+            return {
+                ...sector._doc,
+                esps: espList.filter((esp) => esp.lastHistoric && esp.lastHistoric.espSector && esp.lastHistoric.espSector.id == sector.id),
+                iaEsps: espList.filter((esp) => esp.lastHistoric && esp.lastHistoric.iaEspSector && esp.lastHistoric.iaEspSector.id == sector.id),
+            };
+        });
 
         res.json(sectorList);
     }

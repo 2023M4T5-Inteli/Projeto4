@@ -9,24 +9,26 @@ module.exports = class IaService {
 
     async trainIa() {
         const historics = await historicProvider().list({ verified: true });
-        const normalizedHistorics = historics.map((historic) => {
-            const connections = historic.connections.map((connection) => {
+        const normalizedHistorics = historics
+            .filter((historic) => historic.espSector && historic.espSector.id)
+            .map((historic) => {
+                const connections = historic.connections.map((connection) => {
+                    return {
+                        router: connection.router.mac,
+                        wifiPotency: connection.wifiPotency,
+                    };
+                });
+
+                connections.push({
+                    router: historic.router.mac,
+                    wifiPotency: historic.wifiPotency,
+                });
+
                 return {
-                    router: connection.router.mac,
-                    wifiPotency: connection.wifiPotency,
+                    sector: historic.espSector.id,
+                    connections,
                 };
             });
-
-            connections.push({
-                router: historic.router.mac,
-                wifiPotency: historic.wifiPotency,
-            });
-
-            return {
-                sector: historic.espSector.id,
-                connections,
-            };
-        });
 
         try {
             return await this.connection.postTrain(normalizedHistorics);
