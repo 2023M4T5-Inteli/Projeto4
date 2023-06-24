@@ -1,14 +1,16 @@
 #ifndef BUZZER_H
 #define BUZZER_H
 
-
+//notas usadas para o buzzer
 #define NOTE_G4  392
 #define NOTE_G5  784
 #define NOTE_C4  262
 #define NOTE_C5  523
 
-const int speakerPin = 16; // GPIO pin connected to the speaker or buzzer
+//gpio buzzer
+const int speakerPin = 16; 
 
+//array com músicas
 int onSong[] = {NOTE_C4, NOTE_G4, NOTE_C5, NOTE_G5};
 int offSong[] = {NOTE_G5, NOTE_C5, NOTE_G4, NOTE_C4};
 int errorSong[] = {NOTE_G5, NOTE_G5, NOTE_G5, NOTE_G5};

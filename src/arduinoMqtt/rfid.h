@@ -27,6 +27,7 @@ void initRfid() {
   initBuzzer();
 }
 
+//transforma o código hexadecimal do cartao em string
 String getRFIDValue() {
   String uid = "";
   for (byte i = 0; i < mfrc522.uid.size; i++) {
