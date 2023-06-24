@@ -1,0 +1,17 @@
+.orange-border {
+    border-radius: 10px;
+    background-color: orange;
+    padding: 8px;
+}
+
+.green-border {
+    border-radius: 10px;
+    background-color: rgb(14, 159, 77);
+    padding: 8px;
+}
+
+.blue-border {
+    border-radius: 10px;
+    background-color: rgb(45, 125, 190);
+    padding: 8px;
+}
